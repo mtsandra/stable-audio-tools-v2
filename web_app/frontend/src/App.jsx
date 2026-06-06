@@ -6,6 +6,7 @@ import './App.css'
 
 export default function App() {
   const [soundObjects, setSoundObjects] = useState([])
+  const [externalSource, setExternalSource] = useState(null)
 
   useEffect(() => {
     listSoundObjects().then(setSoundObjects).catch(console.error)
@@ -27,17 +28,22 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>Sound Object Generator</h1>
-        <span className="app-subtitle">Stage 1 — generate &amp; collect sound objects</span>
+        <span className="app-subtitle">generate · collect · iterate</span>
       </header>
       <div className="app-body">
         <main className="app-main">
-          <Generator onSoundObjectAdded={handleAdded} />
+          <Generator
+            onSoundObjectAdded={handleAdded}
+            externalSource={externalSource}
+            onExternalSourceConsumed={() => setExternalSource(null)}
+          />
         </main>
         <aside className="app-library">
           <Library
             soundObjects={soundObjects}
             onDeleted={handleDeleted}
             onUpdated={handleUpdated}
+            onUseAsSource={setExternalSource}
           />
         </aside>
       </div>

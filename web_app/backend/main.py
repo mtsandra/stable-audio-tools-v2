@@ -134,6 +134,14 @@ async def generate(
     }
 
 
+@app.post("/api/upload-audio")
+async def upload_audio(audio: UploadFile = File(...)):
+    filename = f"{uuid.uuid4()}_{audio.filename or 'audio.wav'}"
+    dest = AUDIO_DIR / filename
+    dest.write_bytes(await audio.read())
+    return {"audio_url": f"/audio/{filename}"}
+
+
 class SaveSoundObjectRequest(BaseModel):
     name: str
     prompt: str

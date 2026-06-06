@@ -1,3 +1,11 @@
+export async function uploadAudio(file) {
+  const fd = new FormData()
+  fd.append('audio', file)
+  const res = await fetch('/api/upload-audio', { method: 'POST', body: fd })
+  if (!res.ok) throw new Error('Failed to upload audio')
+  return res.json()
+}
+
 export async function generateEdit(formData) {
   const res = await fetch('/api/generate', { method: 'POST', body: formData })
   if (!res.ok) {

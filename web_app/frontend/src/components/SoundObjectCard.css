@@ -83,3 +83,27 @@
   color: var(--accent2);
   border: 1px solid rgba(78, 205, 196, 0.25);
 }
+
+.so-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.so-use-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.so-use-btn:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+}

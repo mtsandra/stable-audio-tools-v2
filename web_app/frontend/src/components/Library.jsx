@@ -2,7 +2,7 @@ import { deleteSoundObject, updateSoundObject } from '../api.js'
 import SoundObjectCard from './SoundObjectCard.jsx'
 import './Library.css'
 
-export default function Library({ soundObjects, onDeleted, onUpdated }) {
+export default function Library({ soundObjects, onDeleted, onUpdated, onUseAsSource }) {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this sound object?')) return
     try {
@@ -43,6 +43,7 @@ export default function Library({ soundObjects, onDeleted, onUpdated }) {
               obj={obj}
               onDelete={() => handleDelete(obj.id)}
               onRename={name => handleRename(obj.id, name)}
+              onUseAsSource={onUseAsSource}
             />
           ))}
         </div>

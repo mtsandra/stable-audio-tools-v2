@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { generateEdit, saveSoundObject } from '../api.js'
+import { useState, useRef, useEffect } from 'react'
+import { generateEdit, saveSoundObject, uploadAudio } from '../api.js'
 import IntermediateGrid from './IntermediateGrid.jsx'
 import './Generator.css'
 
@@ -13,11 +13,16 @@ const DEFAULTS = {
   seed: -1,
 }
 
-export default function Generator({ onSoundObjectAdded }) {
+export default function Generator({ onSoundObjectAdded, externalSource, onExternalSourceConsumed }) {
+  const [phase, setPhase] = useState('setup')
   const [srcPrompt, setSrcPrompt] = useState('')
   const [tarPrompt, setTarPrompt] = useState('')
   const [audioFile, setAudioFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [sourceLabel, setSourceLabel] = useState(null)
+  const [sourceSaving, setSourceSaving] = useState(false)
+  const [sourceSaveName, setSourceSaveName] = useState('')
+  const [sourceSaved, setSourceSaved] = useState(false)
   const [params, setParams] = useState(DEFAULTS)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -25,10 +30,50 @@ export default function Generator({ onSoundObjectAdded }) {
   const [result, setResult] = useState(null)
   const fileInputRef = useRef(null)
 
+  useEffect(() => {
+    if (!externalSource) return
+    fetch(externalSource.audio_url)
+      .then(r => r.blob())
+      .then(blob => {
+        const file = new File([blob], `${externalSource.name}.wav`, { type: 'audio/wav' })
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(URL.createObjectURL(file))
+        setAudioFile(file)
+        setSourceLabel(externalSource.name)
+        if (externalSource.prompt) setSrcPrompt(externalSource.prompt)
+        setPhase('setup')
+        setResult(null)
+        setError(null)
+        onExternalSourceConsumed?.()
+      })
+      .catch(e => setError(`Failed to load source: ${e.message}`))
+  }, [externalSource])
+
   const setAudio = (file) => {
     setAudioFile(file)
+    setSourceLabel(null)
+    setSourceSaved(false)
+    setSourceSaving(false)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(URL.createObjectURL(file))
+  }
+
+  const handleSaveSource = async () => {
+    if (!audioFile || !sourceSaveName.trim()) return
+    try {
+      const { audio_url } = await uploadAudio(audioFile)
+      const obj = await saveSoundObject({
+        name: sourceSaveName.trim(),
+        prompt: srcPrompt,
+        audio_url,
+        is_final: false,
+      })
+      onSoundObjectAdded(obj)
+      setSourceSaved(true)
+      setSourceSaving(false)
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   const handleDrop = (e) => {
@@ -39,7 +84,7 @@ export default function Generator({ onSoundObjectAdded }) {
 
   const setParam = (key, val) => setParams(p => ({ ...p, [key]: val }))
 
-  const handleGenerate = async () => {
+  const runGeneration = async () => {
     if (!audioFile) { setError('Upload a source audio file first.'); return }
     if (!srcPrompt.trim()) { setError('Enter a source prompt.'); return }
     if (!tarPrompt.trim()) { setError('Enter a target prompt.'); return }
@@ -52,7 +97,9 @@ export default function Generator({ onSoundObjectAdded }) {
       fd.append('src_prompt', srcPrompt)
       fd.append('tar_prompt', tarPrompt)
       Object.entries(params).forEach(([k, v]) => fd.append(k, String(v)))
-      setResult(await generateEdit(fd))
+      const res = await generateEdit(fd)
+      setResult(res)
+      setPhase('results')
     } catch (e) {
       setError(e.message)
     } finally {
@@ -61,18 +108,15 @@ export default function Generator({ onSoundObjectAdded }) {
   }
 
   const handleActivate = async (audio_url, label, isFinal, name) => {
-    try {
-      const obj = await saveSoundObject({
-        name,
-        prompt: tarPrompt,
-        audio_url,
-        generation_id: result?.generation_id,
-        is_final: isFinal,
-      })
-      onSoundObjectAdded(obj)
-    } catch (e) {
-      setError(e.message)
-    }
+    const obj = await saveSoundObject({
+      name,
+      prompt: tarPrompt,
+      audio_url,
+      generation_id: result?.generation_id,
+      is_final: isFinal,
+    })
+    onSoundObjectAdded(obj)
+    return obj
   }
 
   const Slider = ({ k, label, min, max, step }) => (
@@ -87,9 +131,48 @@ export default function Generator({ onSoundObjectAdded }) {
     </label>
   )
 
+  if (phase === 'results') {
+    return (
+      <div className="generator">
+        <div className="results-header">
+          <div className="results-prompts">
+            <span className="results-src" title={srcPrompt}>{srcPrompt}</span>
+            <span className="results-arrow">→</span>
+            <span className="results-tar" title={tarPrompt}>{tarPrompt}</span>
+          </div>
+          <div className="results-actions">
+            <button className="results-back-btn" onClick={() => setPhase('setup')}>← Edit</button>
+            <button
+              className="results-regen-btn"
+              onClick={runGeneration}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Generating…' : '↺ Regenerate'}
+            </button>
+          </div>
+        </div>
+
+        {error && <div className="error-msg">{error}</div>}
+
+        {isGenerating && (
+          <div className="generating-banner">
+            <span className="spinner" /> Generating…
+          </div>
+        )}
+
+        {result && (
+          <IntermediateGrid
+            result={result}
+            tarPrompt={tarPrompt}
+            onActivate={handleActivate}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="generator">
-      {/* Source */}
       <section className="gen-section">
         <label className="section-label">Source audio</label>
         <div
@@ -99,7 +182,7 @@ export default function Generator({ onSoundObjectAdded }) {
           onDragOver={e => e.preventDefault()}
         >
           {audioFile
-            ? <span className="drop-filename">{audioFile.name}</span>
+            ? <span className="drop-filename">{sourceLabel ?? audioFile.name}</span>
             : <span>Drop audio here or click to upload</span>}
           <input
             ref={fileInputRef} type="file" accept="audio/*"
@@ -108,6 +191,32 @@ export default function Generator({ onSoundObjectAdded }) {
           />
         </div>
         {previewUrl && <audio className="audio-preview" src={previewUrl} controls />}
+        {audioFile && (
+          <div className="source-save-row">
+            {sourceSaved ? (
+              <span className="saved-badge-inline">✓ Saved to library</span>
+            ) : !sourceSaving ? (
+              <button
+                className="source-save-btn"
+                onClick={() => { setSourceSaveName(sourceLabel ?? audioFile.name.replace(/\.[^.]+$/, '')); setSourceSaving(true) }}
+              >
+                + Save source as sound object
+              </button>
+            ) : (
+              <span className="save-inline-row">
+                <input
+                  className="source-save-input"
+                  value={sourceSaveName}
+                  onChange={e => setSourceSaveName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSaveSource(); if (e.key === 'Escape') setSourceSaving(false) }}
+                  autoFocus
+                />
+                <button className="save-confirm-btn" onClick={handleSaveSource}>Save</button>
+                <button className="save-cancel-btn" onClick={() => setSourceSaving(false)}>✕</button>
+              </span>
+            )}
+          </div>
+        )}
         <input
           className="prompt-input"
           placeholder="Source prompt — describe the input audio"
@@ -116,7 +225,6 @@ export default function Generator({ onSoundObjectAdded }) {
         />
       </section>
 
-      {/* Target */}
       <section className="gen-section">
         <label className="section-label">Target</label>
         <input
@@ -127,7 +235,6 @@ export default function Generator({ onSoundObjectAdded }) {
         />
       </section>
 
-      {/* Params */}
       <section className="gen-section">
         <label className="section-label">Parameters</label>
         <Slider k="lfe_steps" label="Steps" min={5} max={100} step={1} />
@@ -162,17 +269,13 @@ export default function Generator({ onSoundObjectAdded }) {
 
       <button
         className="generate-btn"
-        onClick={handleGenerate}
+        onClick={runGeneration}
         disabled={isGenerating}
       >
         {isGenerating
           ? <><span className="spinner" /> Generating…</>
-          : 'Generate'}
+          : 'Generate →'}
       </button>
-
-      {result && (
-        <IntermediateGrid result={result} onActivate={handleActivate} />
-      )}
     </div>
   )
 }

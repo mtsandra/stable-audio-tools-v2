@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './SoundObjectCard.css'
 
-export default function SoundObjectCard({ obj, onDelete, onRename }) {
+export default function SoundObjectCard({ obj, onDelete, onRename, onUseAsSource }) {
   const [editing, setEditing] = useState(false)
   const [nameVal, setNameVal] = useState(obj.name)
 
@@ -46,7 +46,12 @@ export default function SoundObjectCard({ obj, onDelete, onRename }) {
 
       <audio className="so-audio" src={obj.audio_url} controls preload="none" />
 
-      {obj.is_final && <span className="so-badge final">final</span>}
+      <div className="so-footer">
+        {obj.is_final && <span className="so-badge final">final</span>}
+        <button className="so-use-btn" onClick={() => onUseAsSource(obj)} title="Use as source audio">
+          → Use as source
+        </button>
+      </div>
     </div>
   )
 }

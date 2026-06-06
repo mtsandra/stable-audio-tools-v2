@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './IntermediateGrid.css'
 
-function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultName }) {
+function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultName, saved }) {
   const [saving, setSaving] = useState(false)
   const [nameVal, setNameVal] = useState('')
 
@@ -30,18 +30,23 @@ function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultNam
         <span className={`item-label ${isFinal ? 'final-label' : ''}`}>
           {item.label}
         </span>
-        {!saving && (
+
+        {saved ? (
+          <span className="saved-badge">✓ Saved</span>
+        ) : !saving ? (
           <button className="save-btn" onClick={startSave}>
             + Save as sound object
           </button>
-        )}
-        {saving && (
+        ) : (
           <span className="save-inline">
             <input
               className="save-name-input"
               value={nameVal}
               onChange={e => setNameVal(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') confirmSave(); if (e.key === 'Escape') setSaving(false) }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') confirmSave()
+                if (e.key === 'Escape') setSaving(false)
+              }}
               autoFocus
             />
             <button className="save-confirm-btn" onClick={confirmSave}>Save</button>
@@ -61,8 +66,9 @@ function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultNam
   )
 }
 
-export default function IntermediateGrid({ result, onActivate }) {
+export default function IntermediateGrid({ result, tarPrompt, onActivate }) {
   const [expanded, setExpanded] = useState(new Set(['__final__']))
+  const [savedKeys, setSavedKeys] = useState(new Set())
 
   const toggle = (key) => {
     setExpanded(prev => {
@@ -70,6 +76,11 @@ export default function IntermediateGrid({ result, onActivate }) {
       next.has(key) ? next.delete(key) : next.add(key)
       return next
     })
+  }
+
+  const handleSave = async (key, audio_url, label, isFinal, name) => {
+    await onActivate(audio_url, label, isFinal, name)
+    setSavedKeys(prev => new Set([...prev, key]))
   }
 
   return (
@@ -90,9 +101,10 @@ export default function IntermediateGrid({ result, onActivate }) {
               item={item}
               isExpanded={expanded.has(key)}
               isFinal={false}
+              saved={savedKeys.has(key)}
               onToggle={() => toggle(key)}
-              onActivate={(name) => onActivate(item.audio_url, item.label, false, name)}
-              defaultName={`${item.label}`}
+              onActivate={(name) => handleSave(key, item.audio_url, item.label, false, name)}
+              defaultName={`${tarPrompt ? tarPrompt + ' — ' : ''}${item.label}`}
             />
           )
         })}
@@ -101,9 +113,10 @@ export default function IntermediateGrid({ result, onActivate }) {
           item={result.final}
           isExpanded={expanded.has('__final__')}
           isFinal={true}
+          saved={savedKeys.has('__final__')}
           onToggle={() => toggle('__final__')}
-          onActivate={(name) => onActivate(result.final.audio_url, 'Final', true, name)}
-          defaultName="Final"
+          onActivate={(name) => handleSave('__final__', result.final.audio_url, 'Final', true, name)}
+          defaultName={tarPrompt ? `${tarPrompt} (final)` : 'Final'}
         />
       </div>
     </div>
