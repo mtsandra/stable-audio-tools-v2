@@ -60,15 +60,10 @@ export default function Generator({ onSoundObjectAdded }) {
     }
   }
 
-  const handleActivate = async (audio_url, label, isFinal) => {
-    const defaultName = isFinal
-      ? `${tarPrompt} (final)`
-      : `${tarPrompt} — ${label}`
-    const name = window.prompt('Name this sound object:', defaultName)
-    if (!name) return
+  const handleActivate = async (audio_url, label, isFinal, name) => {
     try {
       const obj = await saveSoundObject({
-        name: name.trim(),
+        name,
         prompt: tarPrompt,
         audio_url,
         generation_id: result?.generation_id,

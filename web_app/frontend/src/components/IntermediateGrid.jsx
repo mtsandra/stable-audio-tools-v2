@@ -1,7 +1,21 @@
 import { useState } from 'react'
 import './IntermediateGrid.css'
 
-function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate }) {
+function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultName }) {
+  const [saving, setSaving] = useState(false)
+  const [nameVal, setNameVal] = useState('')
+
+  const startSave = () => {
+    setNameVal(defaultName)
+    setSaving(true)
+  }
+
+  const confirmSave = async () => {
+    if (!nameVal.trim()) return
+    setSaving(false)
+    await onActivate(nameVal.trim())
+  }
+
   return (
     <div className={`audio-item ${isExpanded ? 'expanded' : ''} ${isFinal ? 'is-final' : ''}`}>
       <div className="audio-item-row">
@@ -16,9 +30,24 @@ function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate }) {
         <span className={`item-label ${isFinal ? 'final-label' : ''}`}>
           {item.label}
         </span>
-        <button className="save-btn" onClick={onActivate}>
-          + Save as sound object
-        </button>
+        {!saving && (
+          <button className="save-btn" onClick={startSave}>
+            + Save as sound object
+          </button>
+        )}
+        {saving && (
+          <span className="save-inline">
+            <input
+              className="save-name-input"
+              value={nameVal}
+              onChange={e => setNameVal(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') confirmSave(); if (e.key === 'Escape') setSaving(false) }}
+              autoFocus
+            />
+            <button className="save-confirm-btn" onClick={confirmSave}>Save</button>
+            <button className="save-cancel-btn" onClick={() => setSaving(false)}>✕</button>
+          </span>
+        )}
       </div>
       {isExpanded && (
         <audio
@@ -62,7 +91,8 @@ export default function IntermediateGrid({ result, onActivate }) {
               isExpanded={expanded.has(key)}
               isFinal={false}
               onToggle={() => toggle(key)}
-              onActivate={() => onActivate(item.audio_url, item.label, false)}
+              onActivate={(name) => onActivate(item.audio_url, item.label, false, name)}
+              defaultName={`${item.label}`}
             />
           )
         })}
@@ -72,7 +102,8 @@ export default function IntermediateGrid({ result, onActivate }) {
           isExpanded={expanded.has('__final__')}
           isFinal={true}
           onToggle={() => toggle('__final__')}
-          onActivate={() => onActivate(result.final.audio_url, 'Final', true)}
+          onActivate={(name) => onActivate(result.final.audio_url, 'Final', true, name)}
+          defaultName="Final"
         />
       </div>
     </div>

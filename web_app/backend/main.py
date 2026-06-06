@@ -22,8 +22,12 @@ import httpx
 import uvicorn
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 
 # ── Storage ───────────────────────────────────────────────────────────────────
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -41,6 +45,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.mount("/audio", StaticFiles(directory=str(AUDIO_DIR)), name="audio")
+
+if FRONTEND_DIST.exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="assets")
 
 
 # ── Sound object persistence ──────────────────────────────────────────────────
@@ -184,6 +191,17 @@ def delete_sound_object(obj_id: str):
         raise HTTPException(404, "Sound object not found")
     _save_sound_objects(filtered)
     return {"ok": True}
+
+
+# ── Frontend catch-all ────────────────────────────────────────────────────────
+@app.get("/{full_path:path}", include_in_schema=False)
+def serve_frontend(full_path: str):
+    if not FRONTEND_DIST.exists():
+        raise HTTPException(404, "Frontend not built. Run: cd web_app/frontend && npm run build")
+    candidate = FRONTEND_DIST / full_path
+    if candidate.is_file():
+        return FileResponse(candidate)
+    return FileResponse(FRONTEND_DIST / "index.html")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

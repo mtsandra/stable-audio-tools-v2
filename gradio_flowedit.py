@@ -434,7 +434,7 @@ def _mount_api(interface):
             seed       = int(body.get("seed", -1))
 
             audio_bytes = base64.b64decode(body["audio_b64"])
-            in_sr, waveform = torchaudio.load(_io.BytesIO(audio_bytes))
+            waveform, in_sr = torchaudio.load(_io.BytesIO(audio_bytes))
 
             # Resample if the uploaded audio doesn't match the model's sample rate
             if in_sr != sample_rate:
