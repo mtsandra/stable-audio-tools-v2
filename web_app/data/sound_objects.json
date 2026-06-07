@@ -70,5 +70,45 @@
     "generation_id": "42bd5f78-e5f6-478e-9038-ef9b2a153280",
     "is_final": false,
     "created_at": "2026-06-07T01:21:50.327549"
+  },
+  {
+    "id": "7ca6ab1d-eaf0-4d68-ae0c-74bb6957eb2d",
+    "name": "DS_BPF_drum_kick_quartz",
+    "prompt": "",
+    "audio_url": "/audio/82fb21b8-d431-4783-9fd8-b9bf9fcd96c5_DS_BPF_drum_kick_quartz.wav",
+    "generation_id": null,
+    "is_final": false,
+    "icon": "𖥔",
+    "created_at": "2026-06-07T17:40:46.929929"
+  },
+  {
+    "id": "fb028614-5310-4fd4-8cdb-ab5456a5ab74",
+    "name": "ccb5e5ea-f3f0-4516-be76-53b81442751b_DS_BPG_drum_kick_bounce",
+    "prompt": "",
+    "audio_url": "/audio/dc9aebc8-aeec-42b8-871a-9c807e616f3c_ccb5e5ea-f3f0-4516-be76-53b81442751b_DS_BPG_drum_kick_bounce.wav",
+    "generation_id": null,
+    "is_final": false,
+    "icon": "♥",
+    "created_at": "2026-06-07T17:42:11.221991"
+  },
+  {
+    "id": "005d72f0-534a-42f2-ac04-5459b322c554",
+    "name": "2d6fc2c9-1db6-4ec1-b103-f62633349eb8_DS_BPF_drum_kick_quartz",
+    "prompt": "",
+    "audio_url": "/audio/30a9fa4f-4e15-497e-a5ec-0e106c7611aa_2d6fc2c9-1db6-4ec1-b103-f62633349eb8_DS_BPF_drum_kick_quartz.wav",
+    "generation_id": null,
+    "is_final": false,
+    "icon": "☾",
+    "created_at": "2026-06-07T17:44:02.947909"
+  },
+  {
+    "id": "80d4ec93-bcb8-455c-92d8-b7897bcd4758",
+    "name": "DBK_SS3_83_acoustic_piano_loop_i_like_it_Gmin",
+    "prompt": "",
+    "audio_url": "/audio/18ed698e-9afe-42dd-a93b-87dbb55907b1_DBK_SS3_83_acoustic_piano_loop_i_like_it_Gmin.wav",
+    "generation_id": null,
+    "is_final": false,
+    "icon": "𓃰",
+    "created_at": "2026-06-07T17:46:27.833707"
   }
 ]

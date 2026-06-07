@@ -32,8 +32,11 @@ FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 # ── Storage ───────────────────────────────────────────────────────────────────
 DATA_DIR = Path(__file__).parent.parent / "data"
 AUDIO_DIR = DATA_DIR / "audio"
+STOCK_AUDIO_DIR = Path(__file__).parent.parent / "frontend" / "stock-sounds"
 SOUND_OBJECTS_FILE = DATA_DIR / "sound_objects.json"
+STOCK_OBJECTS_FILE = DATA_DIR / "stock_sound_objects.json"
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+STOCK_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 _gradio_url: str = ""
 
@@ -45,6 +48,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.mount("/audio", StaticFiles(directory=str(AUDIO_DIR)), name="audio")
+app.mount("/stock-audio", StaticFiles(directory=str(STOCK_AUDIO_DIR)), name="stock_audio")
 
 if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="assets")
@@ -54,6 +58,12 @@ if FRONTEND_DIST.exists():
 def _load_sound_objects():
     if SOUND_OBJECTS_FILE.exists():
         return json.loads(SOUND_OBJECTS_FILE.read_text())
+    return []
+
+
+def _load_stock_objects():
+    if STOCK_OBJECTS_FILE.exists():
+        return json.loads(STOCK_OBJECTS_FILE.read_text())
     return []
 
 
@@ -175,6 +185,11 @@ def create_sound_object(req: SaveSoundObjectRequest):
 @app.get("/api/sound-objects")
 def list_sound_objects():
     return _load_sound_objects()
+
+
+@app.get("/api/stock-objects")
+def list_stock_objects():
+    return _load_stock_objects()
 
 
 class UpdateSoundObjectRequest(BaseModel):

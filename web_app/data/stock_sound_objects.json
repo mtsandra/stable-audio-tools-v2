@@ -1,0 +1,98 @@
+[
+  {
+    "id": "stock-808",
+    "name": "808",
+    "prompt": "808 bass drum",
+    "audio_url": "/stock-audio/808.wav",
+    "icon": "🔊",
+    "is_stock": true
+  },
+  {
+    "id": "stock-snare",
+    "name": "Snare",
+    "prompt": "Crisp snare hit",
+    "audio_url": "/stock-audio/snare.wav",
+    "icon": "�",
+    "is_stock": true
+  },
+  {
+    "id": "stock-hat",
+    "name": "Hi-Hat",
+    "prompt": "Closed hi-hat",
+    "audio_url": "/stock-audio/hat.wav",
+    "icon": "🔔",
+    "is_stock": true
+  },
+  {
+    "id": "stock-clap",
+    "name": "Clap",
+    "prompt": "Hand clap",
+    "audio_url": "/stock-audio/clap.wav",
+    "icon": "👏",
+    "is_stock": true
+  },
+  {
+    "id": "stock-cowbell",
+    "name": "Cowbell",
+    "prompt": "Cowbell hit",
+    "audio_url": "/stock-audio/cowbell.wav",
+    "icon": "🐄",
+    "is_stock": true
+  },
+  {
+    "id": "stock-bubble",
+    "name": "Bubble",
+    "prompt": "Bubble sound",
+    "audio_url": "/stock-audio/bubble.wav",
+    "icon": "🫧",
+    "is_stock": true
+  },
+  {
+    "id": "stock-piano",
+    "name": "Piano",
+    "prompt": "Chopped piano",
+    "audio_url": "/stock-audio/chopped-piano.wav",
+    "icon": "�",
+    "is_stock": true
+  },
+  {
+    "id": "stock-synth-bass",
+    "name": "Synth Bass",
+    "prompt": "Synth bass sound",
+    "audio_url": "/stock-audio/1-src-synth-bass.wav",
+    "icon": "🎸",
+    "is_stock": true
+  },
+  {
+    "id": "stock-tiger",
+    "name": "Tiger",
+    "prompt": "Tiger growl",
+    "audio_url": "/stock-audio/2-src-tiger.wav",
+    "icon": "🐯",
+    "is_stock": true
+  },
+  {
+    "id": "stock-choir",
+    "name": "Choir",
+    "prompt": "Choir vocals",
+    "audio_url": "/stock-audio/3-src-choir.wav",
+    "icon": "�",
+    "is_stock": true
+  },
+  {
+    "id": "stock-drumloop",
+    "name": "Drum Loop",
+    "prompt": "808 drum loop",
+    "audio_url": "/stock-audio/4-src-808-drumloop.wav",
+    "icon": "🪘",
+    "is_stock": true
+  },
+  {
+    "id": "stock-glitch",
+    "name": "Glitch",
+    "prompt": "Glitch sound",
+    "audio_url": "/stock-audio/6-src-glitch.wav",
+    "icon": "⚡",
+    "is_stock": true
+  }
+]

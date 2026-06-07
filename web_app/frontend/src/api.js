@@ -21,6 +21,12 @@ export async function listSoundObjects() {
   return res.json()
 }
 
+export async function listStockObjects() {
+  const res = await fetch('/api/stock-objects')
+  if (!res.ok) throw new Error('Failed to load stock objects')
+  return res.json()
+}
+
 export async function saveSoundObject(data) {
   const res = await fetch('/api/sound-objects', {
     method: 'POST',

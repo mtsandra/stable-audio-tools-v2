@@ -1,5 +1,7 @@
 node_modules/
 sound_objects.json
+!stock_sound_objects.json
+!web_app/data/stock_audio/
 package-lock.json
 
 # Byte-compiled / optimized / DLL files
@@ -165,6 +167,7 @@ cython_debug/
 
 *.ckpt
 *.wav
+!web_app/data/stock_audio/*.wav
 wandb/*
 *.pdf
 sparse-causal-diffusion

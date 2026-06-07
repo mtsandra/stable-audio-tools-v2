@@ -30,11 +30,14 @@ function createRingGroup(x, y, index = 0) {
     }],
     position: { x: x + off.x, y: y + off.y },
     scale: 1,
+    isLeader: false,
   }
 }
 
-export default function Phase2({ soundObjects }) {
+export default function Phase2({ soundObjects, stockObjects = [] }) {
   const [groups, setGroups] = useState(() => [createRingGroup(0, 0)])
+  const [connections, setConnections] = useState([]) // Array of { from: groupId, to: groupId }
+  const [draggingConnection, setDraggingConnection] = useState(null) // { fromId, startPos, currentPos }
   const [editingSlot, setEditingSlot] = useState(null)
   const [editorPos, setEditorPos] = useState({ x: 0, y: 0 })
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -43,9 +46,33 @@ export default function Phase2({ soundObjects }) {
   const panStart = useRef({ x: 0, y: 0 })
   const canvasRef = useRef(null)
 
-  const handleUpdateGroup = useCallback((updated) => {
-    setGroups(prev => prev.map(g => g.id === updated.id ? updated : g))
-  }, [])
+  const handleUpdateGroup = useCallback((updated, syncPlay = false) => {
+    setGroups(prev => {
+      let newGroups = prev.map(g => g.id === updated.id ? updated : g)
+      
+      // If a ring started/stopped playing, sync all connected groups
+      if (syncPlay) {
+        const connectedIds = new Set()
+        const findConnected = (id) => {
+          if (connectedIds.has(id)) return
+          connectedIds.add(id)
+          connections.forEach(c => {
+            if (c.from === id) findConnected(c.to)
+            if (c.to === id) findConnected(c.from)
+          })
+        }
+        findConnected(updated.id)
+        
+        const isPlaying = updated.rings.some(r => r.isPlaying)
+        return newGroups.map(g => 
+          connectedIds.has(g.id) 
+            ? { ...g, rings: g.rings.map(r => ({ ...r, isPlaying, currentSlot: 0 })) }
+            : g
+        )
+      }
+      return newGroups
+    })
+  }, [connections])
 
   const handleAddGroup = useCallback((e) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -53,6 +80,53 @@ export default function Phase2({ soundObjects }) {
     const y = (e.clientY - rect.top - rect.height / 2 - canvasOffset.y) / canvasZoom
     setGroups(prev => [...prev, createRingGroup(x, y, prev.length)])
   }, [canvasOffset, canvasZoom])
+
+  const handleConnectionStart = useCallback((groupId, pos) => {
+    setDraggingConnection({ fromId: groupId, startPos: pos, currentPos: pos })
+  }, [])
+
+  const handleConnectionMove = useCallback((e) => {
+    if (!draggingConnection) return
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    setDraggingConnection(prev => ({
+      ...prev,
+      currentPos: {
+        x: (e.clientX - rect.left - rect.width / 2 - canvasOffset.x) / canvasZoom,
+        y: (e.clientY - rect.top - rect.height / 2 - canvasOffset.y) / canvasZoom
+      }
+    }))
+  }, [draggingConnection, canvasOffset, canvasZoom])
+
+  const handleConnectionEnd = useCallback((targetGroupId) => {
+    if (!draggingConnection) return
+    if (targetGroupId && targetGroupId !== draggingConnection.fromId) {
+      const targetGroup = groups.find(g => g.id === targetGroupId)
+      const fromGroup = groups.find(g => g.id === draggingConnection.fromId)
+      
+      // Only allow connecting TO a leader, and FROM a non-leader
+      if (!targetGroup?.isLeader || fromGroup?.isLeader) {
+        setDraggingConnection(null)
+        return
+      }
+      
+      // Check if connection already exists
+      const exists = connections.some(c => 
+        (c.from === draggingConnection.fromId && c.to === targetGroupId) ||
+        (c.to === draggingConnection.fromId && c.from === targetGroupId)
+      )
+      if (!exists) {
+        setConnections(prev => [...prev, { from: draggingConnection.fromId, to: targetGroupId }])
+      }
+    }
+    setDraggingConnection(null)
+  }, [draggingConnection, connections, groups])
+
+  const handleRemoveConnection = useCallback((fromId, toId) => {
+    setConnections(prev => prev.filter(c => 
+      !((c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId))
+    ))
+  }, [])
 
   const handleSlotEdit = useCallback((groupId, ringId, slotIndex) => {
     console.log('[Phase2] handleSlotEdit', { groupId, ringId, slotIndex })
@@ -89,13 +163,19 @@ export default function Phase2({ soundObjects }) {
   }, [canvasOffset])
 
   useEffect(() => {
-    if (!isPanning) return
-    const onMove = (e) => setCanvasOffset({ x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y })
-    const onUp = () => setIsPanning(false)
+    if (!isPanning && !draggingConnection) return
+    const onMove = (e) => {
+      if (isPanning) setCanvasOffset({ x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y })
+      if (draggingConnection) handleConnectionMove(e)
+    }
+    const onUp = () => {
+      setIsPanning(false)
+      if (draggingConnection) handleConnectionEnd(null)
+    }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-  }, [isPanning])
+  }, [isPanning, draggingConnection, handleConnectionMove, handleConnectionEnd])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -115,9 +195,11 @@ export default function Phase2({ soundObjects }) {
       className="bg-zinc-950 overflow-hidden relative"
       style={{ flex: '1 1 0', minHeight: 0, minWidth: 0 }}
       onWheel={handleWheel}
+      onDoubleClick={handleAddGroup}
     >
       <div
         className={`canvas-bg absolute inset-0 ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+        style={{ zIndex: 0 }}
         onMouseDown={handleCanvasMouseDown}
         onDoubleClick={handleAddGroup}
       />
@@ -130,17 +212,58 @@ export default function Phase2({ soundObjects }) {
           pointerEvents: 'none',
         }}
       >
+        {/* Connection lines */}
+        <svg className="absolute" style={{ overflow: 'visible', pointerEvents: 'none', left: 0, top: 0 }}>
+          {connections.map((conn, i) => {
+            const fromGroup = groups.find(g => g.id === conn.from)
+            const toGroup = groups.find(g => g.id === conn.to)
+            if (!fromGroup || !toGroup) return null
+            return (
+              <g key={i} style={{ pointerEvents: 'auto' }}>
+                <line
+                  x1={fromGroup.position.x} y1={fromGroup.position.y}
+                  x2={toGroup.position.x} y2={toGroup.position.y}
+                  stroke="rgba(168,85,247,0.6)" strokeWidth={3} strokeDasharray="8,4"
+                />
+                <line
+                  x1={fromGroup.position.x} y1={fromGroup.position.y}
+                  x2={toGroup.position.x} y2={toGroup.position.y}
+                  stroke="transparent" strokeWidth={12} className="cursor-pointer"
+                  onClick={() => handleRemoveConnection(conn.from, conn.to)}
+                />
+              </g>
+            )
+          })}
+          {draggingConnection && (
+            <line
+              x1={groups.find(g => g.id === draggingConnection.fromId)?.position.x ?? 0}
+              y1={groups.find(g => g.id === draggingConnection.fromId)?.position.y ?? 0}
+              x2={draggingConnection.currentPos.x} y2={draggingConnection.currentPos.y}
+              stroke="rgba(168,85,247,0.8)" strokeWidth={2} strokeDasharray="4,4"
+            />
+          )}
+        </svg>
+
         {groups.map(group => (
           <div key={group.id} style={{ pointerEvents: 'auto' }}>
-            <RingGroup group={group} onUpdate={handleUpdateGroup} onSlotEdit={handleSlotEdit} canvasZoom={canvasZoom} />
+            <RingGroup
+              group={group}
+              onUpdate={handleUpdateGroup}
+              onSlotEdit={handleSlotEdit}
+              canvasZoom={canvasZoom}
+              onConnectionStart={handleConnectionStart}
+              onConnectionEnd={handleConnectionEnd}
+              isConnecting={!!draggingConnection}
+              connections={connections}
+            />
           </div>
         ))}
       </div>
 
-      <SoundObjectPalette soundObjects={soundObjects} />
+      <SoundObjectPalette soundObjects={soundObjects} stockObjects={stockObjects} />
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-600 text-xs pointer-events-none whitespace-nowrap">
-        Double-click to add clock · Drag to move · Scroll to zoom
+        Double-click to add · ⭐ Star = leader · Link groups to sync play/stop
       </div>
 
 

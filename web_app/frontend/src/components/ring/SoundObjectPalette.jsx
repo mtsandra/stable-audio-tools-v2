@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getIcon } from '../../utils/icons.js'
 
-export function SoundObjectPalette({ soundObjects }) {
+export function SoundObjectPalette({ soundObjects, stockObjects = [] }) {
   const [isOpen, setIsOpen] = useState(true)
+  const [activeTab, setActiveTab] = useState('stock') // 'stock' or 'user'
   const [position, setPosition] = useState(() => ({
     x: Math.max(window.innerWidth - 240, 16),
     y: Math.floor(window.innerHeight * 0.35),
@@ -60,7 +61,70 @@ export function SoundObjectPalette({ soundObjects }) {
     setTooltipPos({ x: rect.right + 10, y: rect.top + rect.height / 2 })
   }, [])
 
-  const reversed = [...soundObjects].reverse()
+  const renderGrid = (objects, emptyMessage) => {
+    if (objects.length === 0) {
+      return (
+        <p className="text-zinc-600 text-[11px] p-3 leading-relaxed">
+          {emptyMessage}
+        </p>
+      )
+    }
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, padding: 8 }}>
+        {objects.map(obj => {
+          const isPlaying = playingId === obj.id
+          return (
+            <div
+              key={obj.id}
+              draggable
+              onDragStart={e => handleItemDragStart(e, obj)}
+              onMouseEnter={e => handleMouseEnter(e, obj)}
+              onMouseLeave={() => setHoveredObj(null)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 10,
+                borderRadius: 8,
+                cursor: 'grab',
+                position: 'relative',
+                background: isPlaying ? 'rgba(124,106,247,0.15)' : 'transparent',
+                transition: 'background 0.15s',
+              }}
+              className="hover:bg-zinc-800"
+            >
+              <button
+                onClick={e => handleIconClick(e, obj)}
+                onMouseDown={e => e.stopPropagation()}
+                style={{
+                  fontSize: 30,
+                  lineHeight: 1,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#e4e4e4',
+                  padding: 0,
+                  display: 'block',
+                  filter: isPlaying ? 'drop-shadow(0 0 8px rgba(124,106,247,1))' : 'none',
+                  animation: isPlaying ? 'icon-pulse 1s ease-in-out infinite' : 'none',
+                  transition: 'filter 0.15s, transform 0.1s',
+                }}
+              >
+                {obj.icon || getIcon(obj.id)}
+              </button>
+              {obj.is_final && (
+                <span style={{
+                  position: 'absolute', top: 3, right: 3,
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: '#4ecdc4', opacity: 0.8,
+                }} />
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <>
@@ -73,7 +137,7 @@ export function SoundObjectPalette({ soundObjects }) {
           className={`flex items-center justify-between px-3 py-2 border-b border-zinc-700 rounded-t-xl ${isMoving ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleHeaderMouseDown}
         >
-          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Sound Objects</span>
+          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Sounds</span>
           <div onMouseDown={e => e.stopPropagation()}>
             <button onClick={() => setIsOpen(v => !v)} className="text-zinc-500 hover:text-zinc-200 text-xs transition-colors">
               {isOpen ? '▲' : '▼'}
@@ -82,67 +146,36 @@ export function SoundObjectPalette({ soundObjects }) {
         </div>
 
         {isOpen && (
-          <div className="max-h-72 overflow-y-auto rounded-b-xl">
-            {reversed.length === 0 ? (
-              <p className="text-zinc-600 text-[11px] p-3 leading-relaxed">
-                No sound objects yet.<br />Generate some in Phase 1.
-              </p>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, padding: 8 }}>
-                {reversed.map(obj => {
-                  const isPlaying = playingId === obj.id
-                  return (
-                    <div
-                      key={obj.id}
-                      draggable
-                      onDragStart={e => handleItemDragStart(e, obj)}
-                      onMouseEnter={e => handleMouseEnter(e, obj)}
-                      onMouseLeave={() => setHoveredObj(null)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: 10,
-                        borderRadius: 8,
-                        cursor: 'grab',
-                        position: 'relative',
-                        background: isPlaying ? 'rgba(124,106,247,0.15)' : 'transparent',
-                        transition: 'background 0.15s',
-                      }}
-                      className="hover:bg-zinc-800"
-                    >
-                      <button
-                        onClick={e => handleIconClick(e, obj)}
-                        onMouseDown={e => e.stopPropagation()}
-                        style={{
-                          fontSize: 30,
-                          lineHeight: 1,
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: '#e4e4e4',
-                          padding: 0,
-                          display: 'block',
-                          filter: isPlaying ? 'drop-shadow(0 0 8px rgba(124,106,247,1))' : 'none',
-                          animation: isPlaying ? 'icon-pulse 1s ease-in-out infinite' : 'none',
-                          transition: 'filter 0.15s, transform 0.1s',
-                        }}
-                      >
-                        {obj.icon || getIcon(obj.id)}
-                      </button>
-                      {obj.is_final && (
-                        <span style={{
-                          position: 'absolute', top: 3, right: 3,
-                          width: 6, height: 6, borderRadius: '50%',
-                          background: '#4ecdc4', opacity: 0.8,
-                        }} />
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <>
+            <div className="flex border-b border-zinc-700" onMouseDown={e => e.stopPropagation()}>
+              <button
+                onClick={() => setActiveTab('stock')}
+                className={`flex-1 py-1.5 text-[10px] font-medium transition-colors ${
+                  activeTab === 'stock'
+                    ? 'text-yellow-400 border-b-2 border-yellow-400'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                📦 Stock ({stockObjects.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('user')}
+                className={`flex-1 py-1.5 text-[10px] font-medium transition-colors ${
+                  activeTab === 'user'
+                    ? 'text-purple-400 border-b-2 border-purple-400'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                🎨 My Sounds ({soundObjects.length})
+              </button>
+            </div>
+            <div className="max-h-72 overflow-y-auto rounded-b-xl">
+              {activeTab === 'stock'
+                ? renderGrid(stockObjects, 'No stock sounds available.')
+                : renderGrid([...soundObjects].reverse(), 'No sounds yet.\nGenerate some in Play-Doh.')
+              }
+            </div>
+          </>
         )}
       </div>
 

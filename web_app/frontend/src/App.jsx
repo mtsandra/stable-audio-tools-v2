@@ -2,16 +2,18 @@ import { useState, useEffect, useCallback } from 'react'
 import Generator from './components/Generator.jsx'
 import Library from './components/Library.jsx'
 import Phase2 from './components/Phase2.jsx'
-import { listSoundObjects } from './api.js'
+import { listSoundObjects, listStockObjects } from './api.js'
 import './App.css'
 
 export default function App() {
   const [screen, setScreen] = useState('phase1')
   const [soundObjects, setSoundObjects] = useState([])
+  const [stockObjects, setStockObjects] = useState([])
   const [externalSource, setExternalSource] = useState(null)
 
   useEffect(() => {
     listSoundObjects().then(setSoundObjects).catch(console.error)
+    listStockObjects().then(setStockObjects).catch(console.error)
   }, [])
 
   const handleAdded = useCallback((obj) => {
@@ -54,7 +56,7 @@ export default function App() {
 
       <div className="app-body">
         {screen === 'phase2' ? (
-          <Phase2 soundObjects={soundObjects} />
+          <Phase2 soundObjects={soundObjects} stockObjects={stockObjects} />
         ) : (
           <>
             <main className="app-main">

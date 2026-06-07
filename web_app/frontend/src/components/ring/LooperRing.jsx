@@ -108,6 +108,7 @@ export function LooperRing({ slots, currentSlot, isPlaying, onSlotDrop, onSlotEd
           }}
         />
       )}
-    </div>
+
+      </div>
   )
 }
