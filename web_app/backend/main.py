@@ -1,6 +1,6 @@
 """FastAPI backend for the Sound Object Generator.
 
-Calls /run/generate on the running gradio_flowedit.py server.
+Calls /generate on the running gradio_flowedit.py server.
 Audio travels as base64 in JSON — no file-serving needed, works through any tunnel.
 
 Start with:
@@ -70,16 +70,18 @@ def health():
 @app.post("/api/generate")
 async def generate(
     audio: UploadFile = File(...),
-    src_prompt: str = Form(...),
-    tar_prompt: str = Form(...),
-    lfe_steps: int = Form(20),
-    n_avg: int = Form(10),
     src_lfe_cfg_scale: float = Form(1.0),
     tar_lfe_cfg_scale: float = Form(3.0),
-    num_intermediates: int = Form(9),
+    lfe_steps: int = Form(20),
+    n_avg: int = Form(10),
     sample_center: float = Form(0.5),
     sample_std: float = Form(0.15),
     seed: int = Form(-1),
+    src_prompt: str = Form(...),
+    tar_prompt: str = Form(...),
+    seconds_total: float = Form(30.0),
+    num_intermediates: int = Form(9),
+
 ):
     audio_bytes = await audio.read()
     audio_b64 = base64.b64encode(audio_bytes).decode()
@@ -96,11 +98,12 @@ async def generate(
         "sample_center": sample_center,
         "sample_std": sample_std,
         "seed": seed,
+        "seconds_total": seconds_total,
     }
 
     async with httpx.AsyncClient(follow_redirects=True, timeout=600) as client:
         try:
-            resp = await client.post(f"{_gradio_url}/run/generate", json=payload)
+            resp = await client.post(f"{_gradio_url}/generate", json=payload)
             resp.raise_for_status()
         except httpx.HTTPStatusError as e:
             raise HTTPException(502, f"Gradio error: {e.response.text[:2000]}")
@@ -219,7 +222,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--gradio-url",
-        default=os.environ.get("GRADIO_URL", "http://localhost:7860"),
+        default=os.environ.get("GRADIO_URL", "http://localhost:7881"),
     )
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
