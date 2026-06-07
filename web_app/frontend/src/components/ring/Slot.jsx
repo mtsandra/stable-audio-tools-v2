@@ -61,7 +61,14 @@ export function Slot({ slot, index, isActive, onDrop, onEdit, angle, radius, pla
   }, [index, onDrop])
 
   const handleClick = useCallback((e) => {
-    if (slot.audioBuffer) { e.stopPropagation(); onEdit(index) }
+    console.log('[Slot] clicked', { index, hasAudioBuffer: !!slot.audioBuffer, slot })
+    if (slot.audioBuffer) {
+      console.log('[Slot] has audio, calling onEdit', { index, onEdit: typeof onEdit })
+      e.stopPropagation()
+      onEdit(index)
+    } else {
+      console.log('[Slot] no audio buffer, ignoring click')
+    }
   }, [slot.audioBuffer, index, onEdit])
 
   const x = Math.sin((angle * Math.PI) / 180) * radius
@@ -108,6 +115,7 @@ export function Slot({ slot, index, isActive, onDrop, onEdit, angle, radius, pla
       style={{
         width: size, height: size,
         transform: `translate(${x}px, ${y}px)`,
+        pointerEvents: 'auto',
         background: isActive
           ? 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #7c3aed 100%)'
           : 'linear-gradient(135deg, #3f3f46 0%, #27272a 50%, #18181b 100%)',
@@ -116,6 +124,7 @@ export function Slot({ slot, index, isActive, onDrop, onEdit, angle, radius, pla
       }}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onMouseDown={e => e.stopPropagation()}
       onClick={handleClick}
       title={`${slot.name ?? slot.fileName} — click to edit`}
     >

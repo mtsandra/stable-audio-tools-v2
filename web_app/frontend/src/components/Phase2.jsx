@@ -36,6 +36,7 @@ function createRingGroup(x, y, index = 0) {
 export default function Phase2({ soundObjects }) {
   const [groups, setGroups] = useState(() => [createRingGroup(0, 0)])
   const [editingSlot, setEditingSlot] = useState(null)
+  const [editorPos, setEditorPos] = useState({ x: 0, y: 0 })
   const [canvasZoom, setCanvasZoom] = useState(1)
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
@@ -54,10 +55,11 @@ export default function Phase2({ soundObjects }) {
   }, [canvasOffset, canvasZoom])
 
   const handleSlotEdit = useCallback((groupId, ringId, slotIndex) => {
+    console.log('[Phase2] handleSlotEdit', { groupId, ringId, slotIndex })
     setEditingSlot({ groupId, ringId, slotIndex })
   }, [])
 
-  const handleEditorSave = useCallback((startTime, endTime, volume) => {
+  const handleEditorSave = useCallback((startTime, endTime, volume, effects) => {
     if (!editingSlot) return
     setGroups(prev => prev.map(group => {
       if (group.id !== editingSlot.groupId) return group
@@ -66,12 +68,11 @@ export default function Phase2({ soundObjects }) {
         rings: group.rings.map(ring => {
           if (ring.id !== editingSlot.ringId) return ring
           const newSlots = [...ring.slots]
-          newSlots[editingSlot.slotIndex] = { ...newSlots[editingSlot.slotIndex], startTime, endTime, volume }
+          newSlots[editingSlot.slotIndex] = { ...newSlots[editingSlot.slotIndex], startTime, endTime, volume, effects }
           return { ...ring, slots: newSlots }
         }),
       }
     }))
-    setEditingSlot(null)
   }, [editingSlot])
 
   const handleWheel = useCallback((e) => {
@@ -142,15 +143,15 @@ export default function Phase2({ soundObjects }) {
         Double-click to add clock · Drag to move · Scroll to zoom
       </div>
 
-      <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-zinc-900/80 border border-zinc-700 rounded-lg text-zinc-400 text-xs pointer-events-none">
-        {Math.round(canvasZoom * 100)}% · {groups.length} clock{groups.length !== 1 ? 's' : ''}
-      </div>
 
       {editingSlot && editingSlotData?.audioBuffer && (
         <WaveformEditor
           slot={editingSlotData}
           onSave={handleEditorSave}
           onClose={() => setEditingSlot(null)}
+          position={editorPos}
+          onPositionChange={setEditorPos}
+          slotDuration={(60 / editingRing.bpm) * (32 / editingRing.totalSlots)}
         />
       )}
     </div>

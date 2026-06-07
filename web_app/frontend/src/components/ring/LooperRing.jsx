@@ -5,6 +5,7 @@ const DEFAULT_RADIUS = 180
 const SLOT_SIZE = 28
 
 export function LooperRing({ slots, currentSlot, isPlaying, onSlotDrop, onSlotEdit, activePlaybacks, radius = DEFAULT_RADIUS, onTogglePlay, zIndex }) {
+  console.log('[LooperRing] render', { slotsCount: slots.length, isPlaying, radius })
   const [dragOverSlot, setDragOverSlot] = useState(null)
   const [isHovered, setIsHovered] = useState(false)
   const containerRef = useRef(null)
@@ -71,7 +72,10 @@ export function LooperRing({ slots, currentSlot, isPlaying, onSlotDrop, onSlotEd
             transition: 'all 0.2s ease',
             pointerEvents: 'stroke',
           }}
-          onClick={onTogglePlay}
+          onClick={(e) => {
+              console.log('[LooperRing] ring circle clicked - toggling play', { isPlaying })
+              onTogglePlay()
+            }}
           onMouseDown={e => e.stopPropagation()}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

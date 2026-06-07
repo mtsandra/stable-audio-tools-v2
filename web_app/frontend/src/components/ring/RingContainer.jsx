@@ -8,7 +8,7 @@ const RADIUS_INCREMENT = 55
 
 export function RingContainer({ ring, ringIndex, onUpdate, onSlotEdit, onTogglePlay, zIndex }) {
   const [currentSlot, setCurrentSlot] = useState(ring.currentSlot)
-  const { loadAudioFile, loadAudioFromUrl, playSlot, playClick, activePlaybacks } = useAudioEngine()
+  const { loadAudioFile, loadAudioFromUrl, playSlot, playClick, stopAll, activePlaybacks } = useAudioEngine()
   const radius = BASE_RADIUS + ringIndex * RADIUS_INCREMENT
   const intervalRef = useRef(null)
 
@@ -73,7 +73,17 @@ export function RingContainer({ ring, ringIndex, onUpdate, onSlotEdit, onToggleP
     }
   }, [ring, onUpdate, loadAudioFile, loadAudioFromUrl])
 
-  const handleSlotEdit = useCallback((index) => onSlotEdit(ring.id, index), [ring.id, onSlotEdit])
+  const handleSlotEdit = useCallback((index) => {
+    console.log('[RingContainer] handleSlotEdit', { ringId: ring.id, slotIndex: index })
+    onSlotEdit(ring.id, index)
+  }, [ring.id, onSlotEdit])
+
+  const handleTogglePlay = useCallback(() => {
+    if (ring.isPlaying) {
+      stopAll()
+    }
+    onTogglePlay()
+  }, [ring.isPlaying, stopAll, onTogglePlay])
 
   return (
     <LooperRing
@@ -84,7 +94,7 @@ export function RingContainer({ ring, ringIndex, onUpdate, onSlotEdit, onToggleP
       onSlotEdit={handleSlotEdit}
       activePlaybacks={activePlaybacks}
       radius={radius}
-      onTogglePlay={onTogglePlay}
+      onTogglePlay={handleTogglePlay}
       zIndex={zIndex}
     />
   )

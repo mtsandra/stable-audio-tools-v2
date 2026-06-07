@@ -58,7 +58,7 @@ def _load_sound_objects():
 
 
 def _save_sound_objects(objects):
-    SOUND_OBJECTS_FILE.write_text(json.dumps(objects, indent=2))
+    SOUND_OBJECTS_FILE.write_text(json.dumps(objects, indent=2, ensure_ascii=False))
 
 
 # ── API routes ────────────────────────────────────────────────────────────────

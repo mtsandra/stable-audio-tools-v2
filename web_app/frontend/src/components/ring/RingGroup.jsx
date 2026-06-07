@@ -17,6 +17,7 @@ export function RingGroup({ group, onUpdate, onSlotEdit, canvasZoom = 1 }) {
   const containerRef = useRef(null)
 
   const handleMouseDown = useCallback((e) => {
+    console.log('[RingGroup] handleMouseDown', { target: e.target.tagName, className: e.target.className })
     e.preventDefault(); e.stopPropagation()
     setIsDragging(true); setIsSelected(true)
     dragStart.current = { mouseX: e.clientX, mouseY: e.clientY, groupX: group.position.x, groupY: group.position.y }

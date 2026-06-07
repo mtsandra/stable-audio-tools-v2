@@ -10,9 +10,16 @@ export default function SoundObjectCard({ obj, onDelete, onRename, onUseAsSource
   const [iconVal, setIconVal] = useState(() => obj.icon || getIcon(obj.id))
   const [pickerOpen, setPickerOpen] = useState(false)
   const audioRef = useRef(null)
+  const pendingIconRef = useRef(null)
 
   useEffect(() => {
-    setIconVal(obj.icon || getIcon(obj.id))
+    // Only sync from server if we don't have a pending local change
+    if (pendingIconRef.current === null) {
+      setIconVal(obj.icon || getIcon(obj.id))
+    } else if (obj.icon === pendingIconRef.current) {
+      // Server confirmed our change, clear pending
+      pendingIconRef.current = null
+    }
   }, [obj.icon, obj.id])
 
   const getAudio = useCallback(() => {
@@ -23,15 +30,29 @@ export default function SoundObjectCard({ obj, onDelete, onRename, onUseAsSource
     return audioRef.current
   }, [obj.audio_url])
 
+  const playPromiseRef = useRef(null)
+
   const handleIconClick = useCallback((e) => {
     e.stopPropagation()
     const audio = getAudio()
     if (isPlaying) {
-      audio.pause()
-      audio.currentTime = 0
+      const p = playPromiseRef.current
+      if (p) {
+        p.then(() => {
+          audio.pause()
+          audio.currentTime = 0
+        }).catch(() => {})
+      } else {
+        audio.pause()
+        audio.currentTime = 0
+      }
+      playPromiseRef.current = null
       setIsPlaying(false)
     } else {
-      audio.play()
+      playPromiseRef.current = audio.play()
+      playPromiseRef.current.catch(() => {
+        playPromiseRef.current = null
+      })
       setIsPlaying(true)
     }
   }, [isPlaying, getAudio])
@@ -52,6 +73,7 @@ export default function SoundObjectCard({ obj, onDelete, onRename, onUseAsSource
   }
 
   const handleIconPicked = useCallback((icon) => {
+    pendingIconRef.current = icon
     setIconVal(icon)
     setPickerOpen(false)
     onIconChange?.(icon)

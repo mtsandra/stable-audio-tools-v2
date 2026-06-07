@@ -42,9 +42,9 @@ export default function IconPickerModal({ initial = null, onConfirm, onCancel })
         </div>
 
         <div className="icon-modal-grid">
-          {icons.map((ic, i) => (
+          {icons.map((ic) => (
             <button
-              key={i}
+              key={ic}
               className={`icon-modal-btn${ic === selected ? ' selected' : ''}`}
               onClick={() => setSelected(ic)}
             >
