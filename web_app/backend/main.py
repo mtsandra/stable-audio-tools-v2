@@ -151,6 +151,7 @@ class SaveSoundObjectRequest(BaseModel):
     audio_url: str
     generation_id: Optional[str] = None
     is_final: bool = False
+    icon: Optional[str] = None
 
 
 @app.post("/api/sound-objects")
@@ -163,6 +164,7 @@ def create_sound_object(req: SaveSoundObjectRequest):
         "audio_url": req.audio_url,
         "generation_id": req.generation_id,
         "is_final": req.is_final,
+        "icon": req.icon,
         "created_at": datetime.utcnow().isoformat(),
     }
     objects.append(obj)
@@ -178,6 +180,7 @@ def list_sound_objects():
 class UpdateSoundObjectRequest(BaseModel):
     name: Optional[str] = None
     prompt: Optional[str] = None
+    icon: Optional[str] = None
 
 
 @app.put("/api/sound-objects/{obj_id}")
@@ -189,6 +192,8 @@ def update_sound_object(obj_id: str, req: UpdateSoundObjectRequest):
                 obj["name"] = req.name
             if req.prompt is not None:
                 obj["prompt"] = req.prompt
+            if req.icon is not None:
+                obj["icon"] = req.icon
             _save_sound_objects(objects)
             return obj
     raise HTTPException(404, "Sound object not found")

@@ -22,6 +22,15 @@ export default function Library({ soundObjects, onDeleted, onUpdated, onUseAsSou
     }
   }
 
+  const handleIconChange = async (id, icon) => {
+    try {
+      const updated = await updateSoundObject(id, { icon })
+      onUpdated(updated)
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
   const reversed = [...soundObjects].reverse()
 
   return (
@@ -36,7 +45,7 @@ export default function Library({ soundObjects, onDeleted, onUpdated, onUseAsSou
           No sound objects yet.<br />Generate some and click + Save.
         </p>
       ) : (
-        <div className="library-list">
+        <div className="library-grid">
           {reversed.map(obj => (
             <SoundObjectCard
               key={obj.id}
@@ -44,6 +53,7 @@ export default function Library({ soundObjects, onDeleted, onUpdated, onUseAsSou
               onDelete={() => handleDelete(obj.id)}
               onRename={name => handleRename(obj.id, name)}
               onUseAsSource={onUseAsSource}
+              onIconChange={icon => handleIconChange(obj.id, icon)}
             />
           ))}
         </div>

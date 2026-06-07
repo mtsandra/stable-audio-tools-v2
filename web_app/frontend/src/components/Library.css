@@ -39,13 +39,14 @@
   line-height: 1.7;
 }
 
-.library-list {
+.library-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
+  align-content: start;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }

@@ -1,109 +1,142 @@
-.so-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
+.so-chip {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  position: relative;
-}
-
-.so-header {
-  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  padding: 8px 6px 6px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: grab;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+  min-width: 0;
 }
 
-.so-name {
-  flex: 1;
-  font-size: 12px;
-  font-weight: 500;
+.so-chip:hover {
+  border-color: rgba(124, 106, 247, 0.5);
+  background: var(--surface3);
+}
+
+.so-chip:active {
+  cursor: grabbing;
+}
+
+.so-chip-icon {
+  background: none;
+  border: none;
+  font-size: 30px;
+  line-height: 1;
   cursor: pointer;
+  padding: 2px;
+  border-radius: 6px;
+  transition: transform 0.1s, filter 0.15s;
+  color: var(--text);
+  display: block;
+}
+
+.so-chip-icon:hover {
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 6px rgba(124, 106, 247, 0.8));
+}
+
+.so-chip-icon.is-playing {
+  filter: drop-shadow(0 0 10px rgba(124, 106, 247, 1));
+  animation: icon-pulse 1s ease-in-out infinite;
+}
+
+@keyframes icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.so-chip-name {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.15s;
+  max-width: 100%;
+  padding: 0 2px;
+  cursor: default;
 }
-.so-name:hover { color: var(--accent); }
 
-.so-name-input {
-  flex: 1;
+.so-chip-name-input {
+  width: 100%;
   background: var(--surface3);
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 2px 6px;
-  outline: none;
-}
-
-.so-delete {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 11px;
-  padding: 2px 4px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  transition: color 0.15s, background 0.15s;
-}
-.so-delete:hover {
-  color: var(--danger);
-  background: rgba(224, 82, 82, 0.1);
-}
-
-.so-prompt {
-  font-size: 10px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.so-audio {
-  width: 100%;
-  height: 26px;
-  accent-color: var(--accent);
-}
-
-.so-badge {
-  align-self: flex-start;
   font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-.so-badge.final {
-  background: rgba(78, 205, 196, 0.12);
-  color: var(--accent2);
-  border: 1px solid rgba(78, 205, 196, 0.25);
+  padding: 1px 4px;
+  outline: none;
+  text-align: center;
 }
 
-.so-footer {
+.so-chip-final {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent2);
+  opacity: 0.8;
+}
+
+.so-chip-actions {
+  display: none;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1;
+}
+
+.so-chip:hover .so-chip-actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 2px;
 }
 
-.so-use-btn {
-  background: none;
+.so-chip-use,
+.so-chip-del {
+  background: var(--surface3);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 3px;
   color: var(--text-dim);
-  font-size: 10px;
-  padding: 2px 8px;
+  font-size: 9px;
+  padding: 1px 4px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-  white-space: nowrap;
+  line-height: 1.4;
+  transition: color 0.12s, border-color 0.12s;
 }
-.so-use-btn:hover {
-  border-color: var(--accent2);
+
+.so-chip-use:hover {
   color: var(--accent2);
+  border-color: var(--accent2);
 }
+
+.so-chip-del:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.so-chip-icon-pick {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 9px;
+  padding: 1px 4px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.so-chip-icon-pick:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+

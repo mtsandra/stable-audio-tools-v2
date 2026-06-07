@@ -120,11 +120,21 @@ export function Slot({ slot, index, isActive, onDrop, onEdit, angle, radius, pla
       title={`${slot.name ?? slot.fileName} — click to edit`}
     >
       <div className="relative w-full h-full flex items-center justify-center">
-        <canvas
-          ref={canvasRef}
-          width={48} height={48}
-          className="absolute inset-0 w-full h-full rounded-full opacity-70"
-        />
+        {!slot.icon && (
+          <canvas
+            ref={canvasRef}
+            width={48} height={48}
+            className="absolute inset-0 w-full h-full rounded-full opacity-70"
+          />
+        )}
+        {slot.icon && (
+          <span
+            className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+            style={{ fontSize: 13, lineHeight: 1 }}
+          >
+            {slot.icon}
+          </span>
+        )}
         {playbackInfo && fuseProgress < 1 && (
           <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 56 56">
             <circle

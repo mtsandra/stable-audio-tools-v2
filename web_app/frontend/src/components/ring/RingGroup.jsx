@@ -8,18 +8,18 @@ function createSlots(count) {
   }))
 }
 
-export function RingGroup({ group, onUpdate, onSlotEdit }) {
+export function RingGroup({ group, onUpdate, onSlotEdit, canvasZoom = 1 }) {
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const [isSelected, setIsSelected] = useState(false)
-  const dragStart = useRef({ x: 0, y: 0 })
+  const dragStart = useRef({ mouseX: 0, mouseY: 0, groupX: 0, groupY: 0 })
   const resizeStart = useRef({ scale: 1, x: 0 })
   const containerRef = useRef(null)
 
   const handleMouseDown = useCallback((e) => {
     e.preventDefault(); e.stopPropagation()
     setIsDragging(true); setIsSelected(true)
-    dragStart.current = { x: e.clientX - group.position.x, y: e.clientY - group.position.y }
+    dragStart.current = { mouseX: e.clientX, mouseY: e.clientY, groupX: group.position.x, groupY: group.position.y }
   }, [group.position])
 
   const handleResizeStart = useCallback((e) => {
@@ -32,7 +32,10 @@ export function RingGroup({ group, onUpdate, onSlotEdit }) {
     if (!isDragging && !isResizing) return
     const onMove = (e) => {
       if (isDragging) {
-        onUpdate({ ...group, position: { x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y } })
+        onUpdate({ ...group, position: {
+          x: dragStart.current.groupX + (e.clientX - dragStart.current.mouseX) / canvasZoom,
+          y: dragStart.current.groupY + (e.clientY - dragStart.current.mouseY) / canvasZoom,
+        } })
       } else {
         const dx = e.clientX - resizeStart.current.x
         onUpdate({ ...group, scale: Math.max(0.3, Math.min(2, resizeStart.current.scale + dx * 0.005)) })
@@ -42,7 +45,7 @@ export function RingGroup({ group, onUpdate, onSlotEdit }) {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-  }, [isDragging, isResizing, group, onUpdate])
+  }, [isDragging, isResizing, group, onUpdate, canvasZoom])
 
   const handleUpdateRing = useCallback((updatedRing) => {
     onUpdate({ ...group, rings: group.rings.map(r => r.id === updatedRing.id ? updatedRing : r) })

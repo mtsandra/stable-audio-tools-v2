@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { LooperRing } from './LooperRing'
 import { useAudioEngine } from '../../hooks/useAudioEngine'
+import { getIcon } from '../../utils/icons.js'
 
 const BASE_RADIUS = 80
 const RADIUS_INCREMENT = 55
@@ -54,17 +55,18 @@ export function RingContainer({ ring, ringIndex, onUpdate, onSlotEdit, onToggleP
 
   const handleSlotDrop = useCallback(async (index, payload, type) => {
     try {
-      let audioBuffer, name, fileName
+      let audioBuffer, name, fileName, icon
       if (type === 'sound-object') {
         audioBuffer = await loadAudioFromUrl(payload.audio_url)
         name = payload.name
         fileName = payload.audio_url.split('/').pop() ?? payload.name
+        icon = payload.icon || getIcon(payload.id)
       } else {
         audioBuffer = await loadAudioFile(payload)
         fileName = payload.name
       }
       const newSlots = [...ring.slots]
-      newSlots[index] = { ...newSlots[index], audioBuffer, fileName, name, startTime: 0, endTime: null, volume: 1 }
+      newSlots[index] = { ...newSlots[index], audioBuffer, fileName, name, icon, startTime: 0, endTime: null, volume: 1 }
       onUpdate({ ...ring, slots: newSlots })
     } catch (err) {
       console.error('Failed to load audio:', err)

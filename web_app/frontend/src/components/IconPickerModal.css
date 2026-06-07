@@ -1,0 +1,145 @@
+.icon-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  width: 340px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.icon-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icon-modal-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.icon-modal-preview {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.icon-modal-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+
+.icon-modal-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.icon-modal-tab:hover {
+  color: var(--text-muted);
+}
+
+.icon-modal-tab.active {
+  background: var(--surface3);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.icon-modal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icon-modal-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 24px;
+  line-height: 1;
+  padding: 5px 6px;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.1s, border-color 0.1s, transform 0.1s;
+}
+
+.icon-modal-btn:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+  transform: scale(1.2);
+}
+
+.icon-modal-btn.selected {
+  background: rgba(124, 106, 247, 0.18);
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.icon-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.icon-modal-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.icon-modal-cancel:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.icon-modal-confirm {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.icon-modal-confirm:disabled {
+  background: var(--surface3);
+  color: var(--text-dim);
+  cursor: default;
+}
+
+.icon-modal-confirm:not(:disabled):hover {
+  background: var(--accent-hover);
+}

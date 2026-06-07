@@ -1,19 +1,24 @@
 import { useState } from 'react'
+import IconPickerModal from './IconPickerModal.jsx'
 import './IntermediateGrid.css'
 
 function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultName, saved }) {
-  const [saving, setSaving] = useState(false)
+  const [phase, setPhase] = useState('idle') // 'idle' | 'naming' | 'picking' | 'saved'
   const [nameVal, setNameVal] = useState('')
 
-  const startSave = () => {
+  const startNaming = () => {
     setNameVal(defaultName)
-    setSaving(true)
+    setPhase('naming')
   }
 
-  const confirmSave = async () => {
+  const confirmName = () => {
     if (!nameVal.trim()) return
-    setSaving(false)
-    await onActivate(nameVal.trim())
+    setPhase('picking')
+  }
+
+  const handleIconPicked = async (icon) => {
+    setPhase('saved')
+    await onActivate(nameVal.trim(), icon)
   }
 
   return (
@@ -31,29 +36,42 @@ function AudioItem({ item, isExpanded, isFinal, onToggle, onActivate, defaultNam
           {item.label}
         </span>
 
-        {saved ? (
+        {saved || phase === 'saved' ? (
           <span className="saved-badge">✓ Saved</span>
-        ) : !saving ? (
-          <button className="save-btn" onClick={startSave}>
+        ) : phase === 'idle' ? (
+          <button className="save-btn" onClick={startNaming}>
             + Save as sound object
           </button>
-        ) : (
+        ) : phase === 'naming' || phase === 'picking' ? (
           <span className="save-inline">
             <input
               className="save-name-input"
               value={nameVal}
               onChange={e => setNameVal(e.target.value)}
               onKeyDown={e => {
-                if (e.key === 'Enter') confirmSave()
-                if (e.key === 'Escape') setSaving(false)
+                if (e.key === 'Enter') confirmName()
+                if (e.key === 'Escape') setPhase('idle')
               }}
-              autoFocus
+              autoFocus={phase === 'naming'}
+              readOnly={phase === 'picking'}
             />
-            <button className="save-confirm-btn" onClick={confirmSave}>Save</button>
-            <button className="save-cancel-btn" onClick={() => setSaving(false)}>✕</button>
+            {phase === 'naming' && (
+              <>
+                <button className="save-confirm-btn" onClick={confirmName}>→</button>
+                <button className="save-cancel-btn" onClick={() => setPhase('idle')}>✕</button>
+              </>
+            )}
           </span>
-        )}
+        ) : null}
       </div>
+
+      {phase === 'picking' && (
+        <IconPickerModal
+          onConfirm={handleIconPicked}
+          onCancel={() => setPhase('naming')}
+        />
+      )}
+
       {isExpanded && (
         <audio
           className="item-audio"
@@ -78,8 +96,8 @@ export default function IntermediateGrid({ result, tarPrompt, onActivate }) {
     })
   }
 
-  const handleSave = async (key, audio_url, label, isFinal, name) => {
-    await onActivate(audio_url, label, isFinal, name)
+  const handleSave = async (key, audio_url, label, isFinal, name, icon) => {
+    await onActivate(audio_url, label, isFinal, name, icon)
     setSavedKeys(prev => new Set([...prev, key]))
   }
 
@@ -103,7 +121,7 @@ export default function IntermediateGrid({ result, tarPrompt, onActivate }) {
               isFinal={false}
               saved={savedKeys.has(key)}
               onToggle={() => toggle(key)}
-              onActivate={(name) => handleSave(key, item.audio_url, item.label, false, name)}
+              onActivate={(name, icon) => handleSave(key, item.audio_url, item.label, false, name, icon)}
               defaultName={`${tarPrompt ? tarPrompt + ' — ' : ''}${item.label}`}
             />
           )
@@ -115,7 +133,7 @@ export default function IntermediateGrid({ result, tarPrompt, onActivate }) {
           isFinal={true}
           saved={savedKeys.has('__final__')}
           onToggle={() => toggle('__final__')}
-          onActivate={(name) => handleSave('__final__', result.final.audio_url, 'Final', true, name)}
+          onActivate={(name, icon) => handleSave('__final__', result.final.audio_url, 'Final', true, name, icon)}
           defaultName={tarPrompt ? `${tarPrompt} (final)` : 'Final'}
         />
       </div>

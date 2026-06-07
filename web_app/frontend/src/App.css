@@ -44,11 +44,29 @@ body {
   height: 44px;
 }
 
-.app-header h1 {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
+.app-header-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   flex-shrink: 0;
+}
+
+.app-header h1 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  background: linear-gradient(90deg, #c4b5fd, #7c6af7, #4ecdc4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-header-team {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.4px;
+  text-transform: lowercase;
 }
 
 .app-nav {

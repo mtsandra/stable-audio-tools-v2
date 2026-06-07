@@ -29,19 +29,22 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Sound Object Generator</h1>
+        <div className="app-header-brand">
+          <h1>SAO-Doh 🍞</h1>
+          <span className="app-header-team">by hack-a-lil</span>
+        </div>
         <nav className="app-nav">
           <button
             className={`nav-tab ${screen === 'phase1' ? 'active' : ''}`}
             onClick={() => setScreen('phase1')}
           >
-            Phase 1 — Generate
+            🎨 Play-Doh
           </button>
           <button
             className={`nav-tab ${screen === 'phase2' ? 'active' : ''}`}
             onClick={() => setScreen('phase2')}
           >
-            Phase 2 — Arrange
+            🎛️ Make-Doh
           </button>
         </nav>
         <span className="app-subtitle">

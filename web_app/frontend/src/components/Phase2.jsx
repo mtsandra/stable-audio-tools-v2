@@ -11,7 +11,16 @@ function createSlots(count) {
   }))
 }
 
-function createRingGroup(x, y) {
+const SPAWN_OFFSETS = [
+  { x: 0, y: 0 },
+  { x: 340, y: -60 },
+  { x: -300, y: 200 },
+  { x: 260, y: 260 },
+  { x: -340, y: -200 },
+]
+
+function createRingGroup(x, y, index = 0) {
+  const off = SPAWN_OFFSETS[index % SPAWN_OFFSETS.length]
   return {
     id: crypto.randomUUID(),
     rings: [{
@@ -19,7 +28,7 @@ function createRingGroup(x, y) {
       slots: createSlots(16),
       bpm: 120, totalSlots: 16, isPlaying: false, currentSlot: 0, metronomeEnabled: false,
     }],
-    position: { x, y },
+    position: { x: x + off.x, y: y + off.y },
     scale: 1,
   }
 }
@@ -41,7 +50,7 @@ export default function Phase2({ soundObjects }) {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left - rect.width / 2 - canvasOffset.x) / canvasZoom
     const y = (e.clientY - rect.top - rect.height / 2 - canvasOffset.y) / canvasZoom
-    setGroups(prev => [...prev, createRingGroup(x, y)])
+    setGroups(prev => [...prev, createRingGroup(x, y, prev.length)])
   }, [canvasOffset, canvasZoom])
 
   const handleSlotEdit = useCallback((groupId, ringId, slotIndex) => {
@@ -102,7 +111,8 @@ export default function Phase2({ soundObjects }) {
   return (
     <div
       ref={canvasRef}
-      className="w-full h-full bg-zinc-950 overflow-hidden relative"
+      className="bg-zinc-950 overflow-hidden relative"
+      style={{ flex: '1 1 0', minHeight: 0, minWidth: 0 }}
       onWheel={handleWheel}
     >
       <div
@@ -121,18 +131,18 @@ export default function Phase2({ soundObjects }) {
       >
         {groups.map(group => (
           <div key={group.id} style={{ pointerEvents: 'auto' }}>
-            <RingGroup group={group} onUpdate={handleUpdateGroup} onSlotEdit={handleSlotEdit} />
+            <RingGroup group={group} onUpdate={handleUpdateGroup} onSlotEdit={handleSlotEdit} canvasZoom={canvasZoom} />
           </div>
         ))}
       </div>
 
       <SoundObjectPalette soundObjects={soundObjects} />
 
-      <div className="absolute bottom-4 left-4 text-zinc-600 text-sm pointer-events-none">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-600 text-xs pointer-events-none whitespace-nowrap">
         Double-click to add clock · Drag to move · Scroll to zoom
       </div>
 
-      <div className="absolute top-4 right-4 px-4 py-2 bg-zinc-900/80 border border-zinc-700 rounded-lg text-zinc-300 text-sm">
+      <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-zinc-900/80 border border-zinc-700 rounded-lg text-zinc-400 text-xs pointer-events-none">
         {Math.round(canvasZoom * 100)}% · {groups.length} clock{groups.length !== 1 ? 's' : ''}
       </div>
 

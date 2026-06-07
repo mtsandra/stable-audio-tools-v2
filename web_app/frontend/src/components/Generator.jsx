@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { generateEdit, saveSoundObject, uploadAudio } from '../api.js'
 import IntermediateGrid from './IntermediateGrid.jsx'
+import IconPickerModal from './IconPickerModal.jsx'
 import './Generator.css'
 
 const DEFAULTS = {
@@ -23,6 +24,7 @@ export default function Generator({ onSoundObjectAdded, externalSource, onExtern
   const [sourceSaving, setSourceSaving] = useState(false)
   const [sourceSaveName, setSourceSaveName] = useState('')
   const [sourceSaved, setSourceSaved] = useState(false)
+  const [sourcePickingIcon, setSourcePickingIcon] = useState(false)
   const [params, setParams] = useState(DEFAULTS)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -58,7 +60,7 @@ export default function Generator({ onSoundObjectAdded, externalSource, onExtern
     setPreviewUrl(URL.createObjectURL(file))
   }
 
-  const handleSaveSource = async () => {
+  const handleSaveSource = async (icon) => {
     if (!audioFile || !sourceSaveName.trim()) return
     try {
       const { audio_url } = await uploadAudio(audioFile)
@@ -67,11 +69,14 @@ export default function Generator({ onSoundObjectAdded, externalSource, onExtern
         prompt: srcPrompt,
         audio_url,
         is_final: false,
+        icon: icon ?? null,
       })
       onSoundObjectAdded(obj)
       setSourceSaved(true)
       setSourceSaving(false)
+      setSourcePickingIcon(false)
     } catch (e) {
+      setSourcePickingIcon(false)
       setError(e.message)
     }
   }
@@ -107,13 +112,14 @@ export default function Generator({ onSoundObjectAdded, externalSource, onExtern
     }
   }
 
-  const handleActivate = async (audio_url, label, isFinal, name) => {
+  const handleActivate = async (audio_url, label, isFinal, name, icon) => {
     const obj = await saveSoundObject({
       name,
       prompt: tarPrompt,
       audio_url,
       generation_id: result?.generation_id,
       is_final: isFinal,
+      icon: icon ?? null,
     })
     onSoundObjectAdded(obj)
     return obj
@@ -208,12 +214,18 @@ export default function Generator({ onSoundObjectAdded, externalSource, onExtern
                   className="source-save-input"
                   value={sourceSaveName}
                   onChange={e => setSourceSaveName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSaveSource(); if (e.key === 'Escape') setSourceSaving(false) }}
+                  onKeyDown={e => { if (e.key === 'Enter') setSourcePickingIcon(true); if (e.key === 'Escape') setSourceSaving(false) }}
                   autoFocus
                 />
-                <button className="save-confirm-btn" onClick={handleSaveSource}>Save</button>
+                <button className="save-confirm-btn" onClick={() => setSourcePickingIcon(true)}>→</button>
                 <button className="save-cancel-btn" onClick={() => setSourceSaving(false)}>✕</button>
               </span>
+            )}
+            {sourcePickingIcon && (
+              <IconPickerModal
+                onConfirm={(icon) => handleSaveSource(icon)}
+                onCancel={() => setSourcePickingIcon(false)}
+              />
             )}
           </div>
         )}
@@ -250,7 +262,7 @@ export default function Generator({ onSoundObjectAdded, externalSource, onExtern
 
         {showAdvanced && (
           <div className="advanced-panel">
-            <Slider k="n_avg" label="Noise avg (n_avg)" min={1} max={20} step={1} />
+            <Slider k="n_avg" label="n_avg" min={1} max={20} step={1} />
             <Slider k="num_intermediates" label="Intermediates shown" min={1} max={20} step={1} />
             <Slider k="sample_center" label="Capture center (t)" min={0} max={1} step={0.05} />
             <label className="param-row">
